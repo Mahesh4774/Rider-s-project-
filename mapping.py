@@ -34,3 +34,4 @@ def draw_map(route, twisty_groups, rhythm_points, output_path="route_map2.html")
     folium.Marker(route[-1], popup="End").add_to(m)
 
     m.save(output_path)
+    return m
