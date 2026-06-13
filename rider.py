@@ -4,6 +4,9 @@ from analysis import classify_segments, find_twisty_groups, total_route_length, 
 
 from mapping import draw_map
 
+from road_conditions import fetch_road_elements
+from road_conditions import score_section
+
 def analyze_route(current_location, destination):
     cur_loc_send = current_location + ",kerala"
     des_send = destination + ",kerala"
@@ -16,7 +19,11 @@ def analyze_route(current_location, destination):
     gradients = calculate_gradient(route, elevation)
 
     segments = classify_segments(route, gradients)
-    twisty_group = find_twisty_groups(segments)
+
+    elements = fetch_road_elements(route)  # one API call
+
+    print(f"Elements fetched: {len(elements)}")
+    twisty_group = find_twisty_groups(segments,elements)
 
     rhythm_points = []
     for group in twisty_group:
@@ -24,6 +31,7 @@ def analyze_route(current_location, destination):
 
     total_length_m = total_route_length(route)
     total_route_km = total_length_m / 1000
+
 
     draw_map(route, twisty_group, rhythm_points)
 
@@ -38,6 +46,13 @@ if __name__ == "__main__":
     destination = input("Enter the destination that you want to travel to...")
     result = analyze_route(current_location, destination)
     print(f"\nTotal distance = {result['total_km']:.2f} km")
+    print(f"Twisty groups found: {len(result['twisty_groups'])}")
+    from road_conditions import score_section, fetch_road_elements
+
+    elements = fetch_road_elements(result['route'])
+    for i, group in enumerate(result['twisty_groups']):
+        print(f"Group {i + 1}: score={group['score']:.2f}, road_condition={group.get('road_conditions')}")
+
 
 # Work with real or longer routes
 #

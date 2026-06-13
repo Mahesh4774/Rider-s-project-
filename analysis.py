@@ -6,7 +6,7 @@ from config import (
     MIN_SCORE_THRESHOLD,
     RHYTHM_MULTIPLIER
 )
-
+from road_conditions import score_section
 def classify_segments(route,gradients):
     segments = []
 
@@ -42,7 +42,8 @@ def total_route_length(route):
         for i in range(len(route) - 1)
     )
 
-def find_twisty_groups(segments):
+def find_twisty_groups(segments,elements):
+
     twisty_group = []
     current_group = []
     current_direction = []
@@ -76,7 +77,10 @@ def find_twisty_groups(segments):
                 rhythm_bonus = direction_changes * RHYTHM_MULTIPLIER
                 avg_gradient = gradient_sum / len(current_group) if current_group else 0
                 gradient_bonus = avg_gradient * 0.5  # tune this
-                twist_score = twist_score + rhythm_bonus + gradient_bonus
+                road_condition = score_section(elements, current_group)
+                road_condition_multiplier = road_condition if road_condition is not None else 0.8
+                twist_score = (twist_score + rhythm_bonus + gradient_bonus) * road_condition_multiplier
+
 
 
                 if twist_score >= MIN_SCORE_THRESHOLD:
@@ -84,7 +88,8 @@ def find_twisty_groups(segments):
                         "points": current_group,
                         "score": twist_score,
                         "direction":current_direction,
-                        "direction_changes":direction_changes
+                        "direction_changes":direction_changes,
+                        "road_conditions":road_condition
                     })
 
             current_group = []
@@ -101,14 +106,17 @@ def find_twisty_groups(segments):
         rhythm_bonus = direction_changes * RHYTHM_MULTIPLIER
         avg_gradient = gradient_sum / len(current_group) if current_group else 0
         gradient_bonus = avg_gradient * 0.5  # tune this
-        twist_score = twist_score + rhythm_bonus + gradient_bonus
+        road_condition = score_section(elements, current_group)
+        road_condition_multiplier = road_condition if road_condition is not None else 0.8
+        twist_score = (twist_score + rhythm_bonus + gradient_bonus) * road_condition_multiplier
 
         if twist_score >= MIN_SCORE_THRESHOLD:
             twisty_group.append({
                 "points": current_group,
                 "score": twist_score,
                 "direction":current_direction,
-                "direction_changes":direction_changes
+                "direction_changes":direction_changes,
+                "road_conditions":road_condition
             })
 
     return twisty_group
