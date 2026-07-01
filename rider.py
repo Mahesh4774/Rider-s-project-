@@ -4,7 +4,7 @@ from analysis import classify_segments, find_twisty_groups, total_route_length, 
 
 from mapping import draw_map
 
-from road_conditions import fetch_road_elements
+from road_conditions import fetch_road_elements, build_spatial_index
 from road_conditions import score_section
 
 def analyze_route(current_location, destination):
@@ -20,10 +20,12 @@ def analyze_route(current_location, destination):
 
     segments = classify_segments(route, gradients)
 
-    elements = fetch_road_elements(route)  # one API call
+    elements = fetch_road_elements(route)
+    idx, node_map = build_spatial_index(elements)
+    # one API call
 
     print(f"Elements fetched: {len(elements)}")
-    twisty_group = find_twisty_groups(segments,elements)
+    twisty_group = find_twisty_groups(segments,idx, node_map)
 
     rhythm_points = []
     for group in twisty_group:

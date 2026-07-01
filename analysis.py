@@ -42,7 +42,7 @@ def total_route_length(route):
         for i in range(len(route) - 1)
     )
 
-def find_twisty_groups(segments,elements):
+def find_twisty_groups(segments, idx, node_map):
 
     twisty_group = []
     current_group = []
@@ -77,7 +77,7 @@ def find_twisty_groups(segments,elements):
                 rhythm_bonus = direction_changes * RHYTHM_MULTIPLIER
                 avg_gradient = gradient_sum / len(current_group) if current_group else 0
                 gradient_bonus = avg_gradient * 0.5  # tune this
-                road_condition = score_section(elements, current_group)
+                road_condition = score_section(idx, node_map, current_group)
                 road_condition_multiplier = road_condition if road_condition is not None else 0.8
                 twist_score = (twist_score + rhythm_bonus + gradient_bonus) * road_condition_multiplier
 
@@ -106,7 +106,7 @@ def find_twisty_groups(segments,elements):
         rhythm_bonus = direction_changes * RHYTHM_MULTIPLIER
         avg_gradient = gradient_sum / len(current_group) if current_group else 0
         gradient_bonus = avg_gradient * 0.5  # tune this
-        road_condition = score_section(elements, current_group)
+        road_condition = score_section(idx, node_map, current_group)
         road_condition_multiplier = road_condition if road_condition is not None else 0.8
         twist_score = (twist_score + rhythm_bonus + gradient_bonus) * road_condition_multiplier
 

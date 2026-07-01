@@ -1,5 +1,6 @@
 import requests
 from geometry import distance_m
+from rtree import index
 
 SURFACE_SCORES = {
     "asphalt": 1.0,
@@ -52,17 +53,30 @@ def fetch_road_elements(route):
     data = query_overpass_bbox(south, west, north, east)
     return data.get("elements", [])
 
-def find_closest_element(route_point, elements):
-    best = None
-    best_dist = float("inf")
+def build_spatial_index(elements):
+    idx = index.Index()
+    node_map = {}
+    i = 0
     for element in elements:
-        geom = element.get("geometry", [])
-        for node in geom:
-            d = distance_m(route_point, (node["lat"], node["lon"]))
-            if d < best_dist:
-                best_dist = d
-                best = element
-    return best, best_dist
+        for node in element.get("geometry", []):
+            idx.insert(i, (node["lat"], node["lon"], node["lat"], node["lon"]))
+            node_map[i] = element
+            i += 1
+    return idx, node_map
+
+def find_closest_element(route_point, idx, node_map):
+    nearest = list(idx.nearest((route_point[0], route_point[1], route_point[0], route_point[1]), 1))
+    if not nearest:
+        return None, float("inf")
+    closest_element = node_map[nearest[0]]
+    # calculate actual distance
+    geom = closest_element.get("geometry", [])
+    best_dist = float("inf")
+    for node in geom:
+        d = distance_m(route_point, (node["lat"], node["lon"]))
+        if d < best_dist:
+            best_dist = d
+    return closest_element, best_dist
 
 def score_tags(tags):
     scores = []
@@ -76,13 +90,12 @@ def score_tags(tags):
             scores.append(s)
     return sum(scores) / len(scores) if scores else None
 
-def score_section(elements, section_points, max_snap_dist=50):
+def score_section(idx, node_map, section_points, max_snap_dist=50):
     scores = []
     for point in section_points:
-        closest, dist = find_closest_element(point, elements)
+        closest, dist = find_closest_element(point, idx, node_map)
         if closest and dist <= max_snap_dist:
             score = score_tags(closest.get("tags", {}))
             if score is not None:
                 scores.append(score)
-
     return sum(scores) / len(scores) if scores else None
