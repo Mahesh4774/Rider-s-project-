@@ -13,6 +13,7 @@ A twisty road finder for Kerala riders.
 - Twisty section scoring (orange/red/darkred by intensity)
 - Rhythm section detection with blue markers
 - Gradient bonus for uphill sections and penalty for downhills
+- Road conditions now affect scoring
 - Built for Kerala roads
 
 ## Screenshot
